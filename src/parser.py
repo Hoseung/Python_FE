@@ -1,4 +1,3 @@
-from asyncio import new_event_loop
 from tokens import *
 from nodes import *
 from ops import Priority, get_precedence
@@ -14,6 +13,7 @@ class Parser:
     def update(self):
         self.curr_token = self.next_token
         self.next_token = next(self.lex)
+        print("update", self.curr_token, self.next_token)
 
     def __iter__(self):
         return self 
@@ -35,17 +35,24 @@ class Parser:
         return expression
 
     def parse_expression(self, precedence: Priority) -> Expression:
-        if expression := self.parse_datatypes() or self.parse_unary() or self.parse_group(): 
-            while self.next_token != Token.SEMICOLON and \
-                precedence.value <= get_precedence(self.next_token).value:
-                if new_expression := self.parse_infix_expression(expression):
-                    expression = new_expression
-                else:
-                    break
-            return expression
-        else:
+        """Evaluate all tokens whose priority >= *precedence* """
+        expression = self.parse_datatypes() or \
+                     self.parse_identifier() or \
+                     self.parse_unary() or \
+                     self.parse_group()
+
+        if expression == None:
+            print("curr_token", self.curr_token)
             raise SyntaxError(f"operand '{self.curr_token.value}' not defined")
 
+        while self.next_token != Token.SEMICOLON and \
+            precedence.value <= get_precedence(self.next_token).value:
+            if new_expression := self.parse_infix_expression(expression):
+                expression = new_expression
+            else:
+                break
+        return expression
+        
     def parse_datatypes(self) -> Expression:
         """parse supported datatypes only"""
         datatypes =[
@@ -96,3 +103,54 @@ class Parser:
         if self.next_token != t:
             raise AssertionError(f"expected {t} but got {self.next_token.name}")
         self.update()
+
+    def parse_identifier(self):
+        if self.curr_token == Token.ID:
+            return Identifier(self.curr_token.value)
+
+    def parse_let_statement(self) -> Statement:
+        if self.curr_token == Token.LET:
+            self.is_next(Token.ID)
+            variable = self.curr_token.value 
+            self.is_next(Token.ASSIGN)
+            self.update() 
+            value = self.parse_expression(Priority.LOWEST)
+            self.is_next(Token.SEMICOLON)
+            self.update()
+            return LetStatement(variable, value)
+
+    def parse_assign_statement(self) -> Statement:
+        if self.curr_token == Token.ID:
+            variable = self.curr_token.value 
+            self.is_next(Token.ASSIGN)
+            self.update() 
+            value = self.parse_expression(Priority.LOWEST)
+            self.is_next(Token.SEMICOLON)
+            self.update()
+            return AssignStatement(variable, value)
+
+    def print_statement(self) -> Statement:
+        if self.curr_token == Token.PRINT:
+            state = self.curr_token.value 
+            self.is_next(Token.LPAREN)
+            self.update()
+            value = self.parse_expression(Priority.LOWEST)
+            self.is_next(Token.RPAREN)
+            self.is_next(Token.SEMICOLON)
+            self.update()
+            return PrintStatement(state, value)
+
+    def parse_statement(self) -> Statement:
+        if self.curr_token == ILLEGAL:
+            raise SyntaxError(f"invalid input: {self.curr_token.value}")
+        return self.parse_let_statement() or \
+                self.parse_assign_statement() or \
+                self.print_statement() or \
+                self.parse_expression_statement()
+
+    def parse_expression_statement(self):
+        expression = self.parse_expression(Priority.LOWEST)
+        if self.next_token == Token.SEMICOLON:
+            self.update()
+            self.update()
+        return expression

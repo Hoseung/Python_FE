@@ -1,5 +1,6 @@
 from lexer import Lexer 
 from tokens import *
+from parser import Parser
 
 def repl():
     i = 0
@@ -26,6 +27,12 @@ def read_file(file_name:str) -> None:
                 break
             print(tok)
 
+def interpreter(data: str):
+    for p in Parser(Lexer(data)):
+        print("P", p)
+        if p == EOF:
+            break
+        p.eval()
 
 if __name__ == "__main__":
     import sys
@@ -39,4 +46,8 @@ if __name__ == "__main__":
         if not exists(file_name):
             print(f"{file_name} not found")
             sys.exit(0)
-        read_file(file_name)
+        with open(file_name) as f:
+            data = f.read()
+        interpreter(data) 
+        # Assume one expression per a line 
+        # or do we allow line continuation?

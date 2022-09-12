@@ -39,4 +39,4 @@ precedence = {
 }
         
 def get_precedence(token: Token) -> Priority:
-    return precedence.get(token.name, Priority.LOWEST) # if no match, get "LOWEST"
+    return precedence.get(token.name, Priority.LOWEST) # if no match, get "LOWEST" by default

@@ -8,7 +8,6 @@
 # "Pratt Parser", opposed to context free grammars and BNF.
 #
 #
-from ast import operator
 from tokens import *
 from tempfile import TemporaryFile
 
@@ -105,5 +104,62 @@ class InfixExpression(Expression):
         except TypeError:
             raise TypeError(f"can't perform {self.operator} between {self.left_type()} and {self.right_type()}")
 
-
 ## No postfix expression such as a++. 
+
+
+storage = {} # global variable name space
+class Identifier(Expression):
+    def __init__(self, name):
+        self.name = name
+    
+    def __repr__(self) -> str:
+        return self.name 
+
+    def eval(self):
+        if self.name in storage: 
+            return storage[self.name]
+        else:
+            raise NameError(f"'{self.name}' is not defined")
+
+class LetStatement(Statement):
+    """Declare a variable"""
+    def __init__(self, name: Identifier, expr:Expression):
+        self.name = name 
+        self.expr = expr 
+    
+    def __repr__(self) -> str:
+        return f"(set {self.name} {self.expr})"
+
+    def eval(self):
+        if self.name in storage:
+            raise NameError(f"'{self.name}' already defined")
+        storage[self.name] = self.expr.eval()
+
+class AssignStatement(Statement):
+    """Update an identifier's value"""
+    def __init__(self, name: str, expr: Expression):
+        self.name = name 
+        self.expr = expr 
+
+    def __repr__(self) -> str:
+        return f"(set {self.name} {self.expr})"
+
+    def eval(self):
+        if self.name not in storage:
+            raise NameError(f"'{self.name}' not defined")
+        storage[self.name] = self.expr.eval()
+
+
+class PrintStatement(Statement):
+    def __init__(self, state, value:Expression):
+        self.state = state 
+        self.value = value 
+
+    def __repr__(self) -> str:
+        return f"({self.state.lower()} {self.value})"
+
+    def eval(self):
+        if self.state == "println":
+            print(self.value.eval())# ends with "\n" by default.
+        else:
+            print(self.value.eval(), end="")

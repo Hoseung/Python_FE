@@ -2,31 +2,31 @@ from xml.dom import SyntaxErr
 from tokens import *
 from ops import switcher, double_switcher
 
-def Lexer_r(data: str) -> TokenInfo:
-    """Lexer for Regex tokens
-    """
-    pos = 0
-    while pos < len(data):
-        for tokenId in Token:
-            # perform regex match
-            # :=  assignment within an expression
-            if match := tokenId.value.match(data, pos):
-                pos = match.end(0)
-                if tokenId == Token.WHITESPACE or tokenId == Token.COMMENT:
-                    # ignore whitespaces and comments
-                    break
-                yield TokenInfo(tokenId.name, match.group(0))
-                break
-        else:
-            # in cas pattern doesn't match, send the character as illegal
-            yield TokenInfo(ILLEGAL, data[pos])
-            pos +=1
-    else:
-        # in parser we read the token two times each iteration
-        # once for current token and once for next token
-        # so handling it by sending EOF twice.
-        yield TokenInfo(EOF, '\x00')
-        yield TokenInfo(EOF, '\x00')
+# def Lexer_r(data: str) -> TokenInfo:
+#     """Lexer for Regex tokens
+#     """
+#     pos = 0
+#     while pos < len(data):
+#         for tokenId in Token:
+#             # perform regex match
+#             # :=  assignment within an expression
+#             if match := tokenId.value.match(data, pos):
+#                 pos = match.end(0)
+#                 if tokenId == Token.WHITESPACE or tokenId == Token.COMMENT:
+#                     # ignore whitespaces and comments
+#                     break
+#                 yield TokenInfo(tokenId.name, match.group(0))
+#                 break
+#         else:
+#             # in cas pattern doesn't match, send the character as illegal
+#             yield TokenInfo(ILLEGAL, data[pos])
+#             pos +=1
+#     else:
+#         # in parser we read the token two times each iteration
+#         # once for current token and once for next token
+#         # so handling it by sending EOF twice.
+#         yield TokenInfo(EOF, '\x00')
+#         yield TokenInfo(EOF, '\x00')
 
 
 class Lexer(object):
@@ -81,10 +81,14 @@ class Lexer(object):
             self.read_char()
 
     def remove_comments(self) -> None:
-        if self.ch == '#"':
+        print("removing comments")
+        if self.ch == '#':
             self.read_char()
             while self.ch not in ["\n", "\r", "\x00"]:
+                print("removing...", self.ch)
                 self.read_char()
+            print(self.ch == "\n")
+            self.read_char()
 
     def lex_operator(self) -> TokenInfo:
         """If encounter an operator, search for = in the statement"""

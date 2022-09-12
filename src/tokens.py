@@ -79,7 +79,11 @@ Token = NewEnum("Token", [
         "IF",        
         "ELSE",      
         "RETURN",    
-        "PRINT"
+        "PRINT",
+    #############
+    # Comments
+    #############
+        "COMMENT"
     ])
 
 keywords = {
