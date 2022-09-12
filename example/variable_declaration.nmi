@@ -1,0 +1,15 @@
+# delaring variables
+let a = 100/10;  # integer
+let b = 2.0*2.0;  # float
+let c = "Hello, World!";  # string
+let d = true;
+
+# printing
+print("integer: ");
+println(a);
+print("float: ");
+println(b);
+print("string: ");
+println(c);
+print("boolean: ");
+println(d);
